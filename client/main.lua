@@ -1,27 +1,20 @@
-ESX = nil
 
 Citizen.CreateThread(function()
-	while ESX == nil do
-		TriggerEvent('esx:getSharedObject', function(obj) ESX = obj end)
-		Citizen.Wait(0)
-	end
-
-	while not ESX.GetPlayerData().job do
-		Citizen.Wait(10)
-	end
-
-	ESX.PlayerData = ESX.GetPlayerData()
-
 	-- Update the door list
-	ESX.TriggerServerCallback('esx_doorlock:getDoorState', function(doorState)
-		for index,state in pairs(doorState) do
-			Config.DoorList[index].locked = state
-		end
-	end)
+	TriggerServerEvent('esx_doorlock:getDoorState')
 end)
 
-RegisterNetEvent('esx:setJob')
-AddEventHandler('esx:setJob', function(job) ESX.PlayerData.job = job end)
+RegisterNetEvent('esx_doorlock:returnDoorState')
+AddEventHandler('esx_doorlock:returnDoorState', function(states)
+	for index, state in pairs(states) do
+			Config.DoorList[index].locked = state
+		end
+end)
+
+Citizen.CreateThread(function()
+	Wait(0);
+	TriggerServerEvent('Doorlock:CheckPerms');
+end)
 
 RegisterNetEvent('esx_doorlock:setDoorState')
 AddEventHandler('esx_doorlock:setDoorState', function(index, state) Config.DoorList[index].locked = state end)
@@ -31,7 +24,6 @@ Citizen.CreateThread(function()
 		local playerCoords = GetEntityCoords(PlayerPedId())
 
 		for k,v in ipairs(Config.DoorList) do
-			v.isAuthorized = isAuthorized(v)
 
 			if v.doors then
 				for k2,v2 in ipairs(v.doors) do
@@ -40,7 +32,7 @@ Citizen.CreateThread(function()
 							v.distanceToPlayer = #(playerCoords - GetEntityCoords(v2.object))
 						end
 
-						if v.locked and v2.objHeading and ESX.Math.Round(GetEntityHeading(v2.object)) ~= v2.objHeading then
+						if v.locked and v2.objHeading and round(GetEntityHeading(v2.object)) ~= v2.objHeading then
 							SetEntityHeading(v2.object, v2.objHeading)
 						end
 					else
@@ -52,7 +44,7 @@ Citizen.CreateThread(function()
 				if v.object and DoesEntityExist(v.object) then
 					v.distanceToPlayer = #(playerCoords - GetEntityCoords(v.object))
 
-					if v.locked and v.objHeading and ESX.Math.Round(GetEntityHeading(v.object)) ~= v.objHeading then
+					if v.locked and v.objHeading and round(GetEntityHeading(v.object)) ~= v.objHeading then
 						SetEntityHeading(v.object, v.objHeading)
 					end
 				else
@@ -65,6 +57,9 @@ Citizen.CreateThread(function()
 		Citizen.Wait(500)
 	end
 end)
+function round(n)
+	return n % 1 >= 0.5 and math.ceil(n) or math.floor(n)
+end
 
 Citizen.CreateThread(function()
 	while true do
@@ -89,15 +84,12 @@ Citizen.CreateThread(function()
 
 				if v.size then size = v.size end
 				if v.locked then displayText = _U('locked') end
-				if v.isAuthorized then displayText = _U('press_button', displayText) end
-
-				ESX.Game.Utils.DrawText3D(v.textCoords, displayText, size)
+				--if v.isAuthorized then displayText = _U('press_button', displayText) end
+				local x, y, z = table.unpack(v.textCoords);
+				Draw3DText(x, y, z - 2, displayText, 4, 0.1, 0.1);
 
 				if IsControlJustReleased(0, 38) then
-					if v.isAuthorized then
-						v.locked = not v.locked
-						TriggerServerEvent('esx_doorlock:updateState', k, v.locked) -- broadcast new state of the door to everyone
-					end
+					TriggerServerEvent('Doorlock:CheckPermsDoor', k, not v.locked);
 				end
 			end
 		end
@@ -107,17 +99,24 @@ Citizen.CreateThread(function()
 		end
 	end
 end)
-
-function isAuthorized(door)
-	if not ESX or not ESX.PlayerData.job then
-		return false
-	end
-
-	for k,job in pairs(door.authorizedJobs) do
-		if job == ESX.PlayerData.job.name then
-			return true
-		end
-	end
-
-	return false
-end
+function Draw3DText(x,y,z,textInput,fontId,scaleX,scaleY)
+	local px,py,pz=table.unpack(GetGameplayCamCoords())
+	local dist = GetDistanceBetweenCoords(px,py,pz, x,y,z, 1)    
+	local scale = (1/dist)*20
+	local fov = (1/GetGameplayCamFov())*100
+	local scale = scale*fov   
+	SetTextScale(scaleX*scale, scaleY*scale)
+	SetTextFont(fontId)
+	SetTextProportional(1)
+	SetTextColour(250, 250, 250, 255)		-- You can change the text color here
+	SetTextDropshadow(1, 1, 1, 1, 255)
+	SetTextEdge(2, 0, 0, 0, 150)
+	SetTextDropShadow()
+	SetTextOutline()
+	SetTextEntry("STRING")
+	SetTextCentre(1)
+	AddTextComponentString(textInput)
+	SetDrawOrigin(x,y,z+2, 0)
+	DrawText(0.0, 0.0)
+	ClearDrawOrigin()
+end	
