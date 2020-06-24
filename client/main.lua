@@ -80,10 +80,10 @@ Citizen.CreateThread(function()
 			end
 
 			if v.distanceToPlayer and v.distanceToPlayer < v.maxDistance then
-				local size, displayText = 1, _U('unlocked')
+				local size, displayText = 1, "~g~Unlocked ~w~[E]"
 
 				if v.size then size = v.size end
-				if v.locked then displayText = _U('locked') end
+				if v.locked then displayText = "~r~Unlocked ~w~[E]" end
 				--if v.isAuthorized then displayText = _U('press_button', displayText) end
 				local x, y, z = table.unpack(v.textCoords);
 				Draw3DText(x, y, z - 2, displayText, 4, 0.1, 0.1);
