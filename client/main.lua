@@ -12,7 +12,7 @@ AddEventHandler('esx_doorlock:returnDoorState', function(states)
 end)
 
 Citizen.CreateThread(function()
-	Wait(0);
+	Wait(1000);
 	TriggerServerEvent('Doorlock:CheckPerms');
 end)
 
@@ -83,7 +83,9 @@ Citizen.CreateThread(function()
 				local size, displayText = 1, "~g~Unlocked ~w~[E]"
 
 				if v.size then size = v.size end
-				if v.locked then displayText = "~r~Unlocked ~w~[E]" end
+				if v.locked then 
+					displayText = "~r~Locked ~w~[E]" 
+				end
 				--if v.isAuthorized then displayText = _U('press_button', displayText) end
 				local x, y, z = table.unpack(v.textCoords);
 				Draw3DText(x, y, z - 2, displayText, 4, 0.1, 0.1);
