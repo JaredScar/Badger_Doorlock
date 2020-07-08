@@ -56,9 +56,9 @@ AddEventHandler('Doorlock:CheckPerms', function()
     if identifierDiscord then
 		local roles = exports.discord_perms:GetRoles(src)
 		if not (roles == false) then
-			for i = 1, #roles do
-				for roleName, roleID in pairs(Config.Roles) do
-					if tonumber(roles[i]) == tonumber(roleID) then
+			for roleName, roleID in pairs(Config.Roles) do
+				for i = 1, #roles do
+					if tostring(roles[i]) == tostring(roleID) then
 						-- Return the index back to the Client script
 						if roleTracker[src] ~= nil then 
 							-- They have a list, add to it 
@@ -66,9 +66,9 @@ AddEventHandler('Doorlock:CheckPerms', function()
 							print("Added " .. GetPlayerName(src) .. " to doorlock-group '" .. roleName .. "'")
 						else 
 							-- No list, make one 
-							roles = {};
-							table.insert(roles, roleName);
-							roleTracker[src] = roles;
+							local roless = {};
+							table.insert(roless, roleName);
+							roleTracker[src] = roless;
 							print("Added " .. GetPlayerName(src) .. " to doorlock-group '" .. roleName .. "'")
 						end
 					end
