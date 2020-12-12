@@ -54,7 +54,7 @@ AddEventHandler('Doorlock:CheckPerms', function()
     end
 	-- TriggerClientEvent("FaxDisVeh:CheckPermission:Return", src, true, false)
     if identifierDiscord then
-		local roles = exports.discord_perms:GetRoles(src)
+		local roles = exports.Badger_Discord_API:GetDiscordRoles(src)
 		if not (roles == false) then
 			for roleName, roleID in pairs(Config.Roles) do
 				for i = 1, #roles do
